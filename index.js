@@ -17,6 +17,21 @@ class QuadTree {
         return this.#area;
     }
 
+    get elements() {
+        return Array.from(
+            this.#children.reduce((elements, child) => {
+                if (child instanceof QuadTree) {
+                    child.elements.forEach(element => {
+                        elements.add(element);
+                    });
+                } else {
+                    elements.add(child);
+                }
+                return elements;
+            }, new Set())
+        );
+    }
+
     toString() {
         return this.#children.map(child => child instanceof QuadTree ? child.toString() : JSON.stringify(child)).filter(s => s).join(', ');
     }

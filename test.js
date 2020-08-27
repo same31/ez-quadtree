@@ -14,6 +14,8 @@ qt.add({x: 380, y: 280, width: 40, height: 40, name: 'H'});
 
 console.log('1.', qt.toString());
 
+console.log('1.1.', JSON.stringify(qt.elements));
+
 console.log('2.', qt.collidingElements({x: 29, y: 33, width: 56, height: 56}));
 
 console.log('3.', qt.collidingElements({x: 385, y: 285, width: 30, height: 5}));
