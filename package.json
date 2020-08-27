@@ -1,5 +1,5 @@
 {
-  "name": "ez-quadtree",
+  "name": "@same31/ez-quadtree",
   "version": "1.0.0",
   "description": "Quadtree implementation",
   "main": "index.js",
