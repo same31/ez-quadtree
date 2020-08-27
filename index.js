@@ -3,23 +3,24 @@ function boxCollidesWithArea({x, y, width, height}, area) {
 }
 
 class QuadTree {
-    #area;
-    #children = [];
-    #isDivided = false;
 
     constructor (x, y, width, height) {
-        this.#area = {
+        this._area = {
             x, y, width, height
         };
+        
+        this.children = [];
+        
+        this.isDivided = false;
     }
 
     get area() {
-        return this.#area;
+        return this._area;
     }
 
     get elements() {
         return Array.from(
-            this.#children.reduce((elements, child) => {
+            this.children.reduce((elements, child) => {
                 if (child instanceof QuadTree) {
                     child.elements.forEach(element => {
                         elements.add(element);
@@ -33,18 +34,18 @@ class QuadTree {
     }
 
     toString() {
-        return this.#children.map(child => child instanceof QuadTree ? child.toString() : JSON.stringify(child)).filter(s => s).join(', ');
+        return this.children.map(child => child instanceof QuadTree ? child.toString() : JSON.stringify(child)).filter(s => s).join(', ');
     }
 
     add (element = {x: 0, y: 0, width: 0, height: 0}) {
-        if (!this.#isDivided) {
-            if (this.#children.length < 4) {
-                this.#children.push(element);
+        if (!this.isDivided) {
+            if (this.children.length < 4) {
+                this.children.push(element);
                 return;
             }
 
             // Divide into sub-quadtrees
-            const { x, y, width, height } = this.#area;
+            const { x, y, width, height } = this.area;
             const subWidth = width / 2;
             const subHeight = height / 2;
             const subTrees = [
@@ -55,7 +56,7 @@ class QuadTree {
             ];
 
             // Re-assign elements into correct sub tree(s)
-            this.#children.forEach(element => {
+            this.children.forEach(element => {
                 subTrees.forEach(tree => {
                     const area = tree.area;
                     if (boxCollidesWithArea(element, area)) {
@@ -64,12 +65,12 @@ class QuadTree {
                 });
             })
 
-            this.#children = subTrees;
-            this.#isDivided = true;
+            this.children = subTrees;
+            this.isDivided = true;
         }
 
         // Assign element into sub tree(s)
-        this.#children.forEach(tree => {
+        this.children.forEach(tree => {
             // Check if element intersects with tree area
             const area = tree.area;
             if (boxCollidesWithArea(element, area)) {
@@ -80,7 +81,7 @@ class QuadTree {
 
     collidingElements(element = {x: 0, y: 0, width: 0, height: 0}) {
         const collidingSet = new Set();
-        this.#children.forEach(child => {
+        this.children.forEach(child => {
             // Check collision with child
             const childIsTree = child instanceof QuadTree;
             const area = childIsTree ? child.area : (({ x, y, width, height }) => ({ x, y, width, height }))(child);
