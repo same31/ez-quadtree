@@ -2,16 +2,20 @@ function boxCollidesWithArea({x, y, width, height}, area) {
     return x + width >= area.x && x <= area.x + area.width && y + height >= area.y && y <= area.y + area.height;
 }
 
-class QuadTree {
+function boxContainsArea({x, y, width, height}, area) {
+    return x <= area.x && x + width >= area.x + area.width && y <= area.y && y + height >= area.y + area.height;
+}
 
-    constructor (x, y, width, height) {
+class QuadTree {
+    constructor (x, y, width, height, config = {maxDivision: 10}) {
         this._area = {
             x, y, width, height
         };
-        
+        this.config = config;
+        this.level = 1;
         this.children = [];
-        
         this.isDivided = false;
+        this.isLeaf = false;
     }
 
     get area() {
@@ -39,7 +43,7 @@ class QuadTree {
 
     add (element = {x: 0, y: 0, width: 0, height: 0}) {
         if (!this.isDivided) {
-            if (this.children.length < 4) {
+            if (this.children.length < 4 || this.isLeaf || this.level >= this.config.maxDivision || boxContainsArea(element, this.area)) {
                 this.children.push(element);
                 return;
             }
@@ -49,10 +53,10 @@ class QuadTree {
             const subWidth = width / 2;
             const subHeight = height / 2;
             const subTrees = [
-                new QuadTree(x, y, subWidth, subHeight),
-                new QuadTree(x, y + subHeight, subWidth, subHeight),
-                new QuadTree(x + subWidth, y, subWidth, subHeight),
-                new QuadTree(x + subWidth, y + subHeight, subWidth, subHeight),
+                new SubTree(this.level, x, y, subWidth, subHeight, this.config),
+                new SubTree(this.level, x, y + subHeight, subWidth, subHeight, this.config),
+                new SubTree(this.level, x + subWidth, y, subWidth, subHeight, this.config),
+                new SubTree(this.level, x + subWidth, y + subHeight, subWidth, subHeight, this.config),
             ];
 
             // Re-assign elements into correct sub tree(s)
@@ -63,7 +67,13 @@ class QuadTree {
                         tree.add(element);
                     }
                 });
-            })
+            });
+
+            if (this.children.every(element => subTrees.every(tree => tree.collidingElements(element).includes(element)))) {
+                this.isLeaf = true;
+                this.children.push(element);
+                return;
+            }
 
             this.children = subTrees;
             this.isDivided = true;
@@ -98,6 +108,13 @@ class QuadTree {
         });
 
         return Array.from(collidingSet);
+    }
+}
+
+class SubTree extends QuadTree {
+    constructor (level, ...args) {
+        super(...args);
+        this.level = level + 1;
     }
 }
 
